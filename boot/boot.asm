@@ -4,92 +4,53 @@
 start:
 	jmp main16
 
-print:
-	pusha
-	mov ah, 0eh             	; set teletype mode
-	jmp .loop
-	.loop:
-		lodsb               	; mov char at si in al
-		cmp al, 0
-		jz .done				; jmp if null
-		int 10h
-		jmp .loop				; loop
-	.done:
-		popa
-		ret
-
-read_disk:
-	pusha
-	mov bx, 0x7e00
-	mov ah, 2               	; read mode
-	mov al, 1               	; read 1 sector
-	mov ch, 0               	; cylinder 0
-	mov dh, 0               	; head 0
-	mov cl, 2               	; sector 2
-	mov dl, [BOOT_DISK]     	; set drive number
-	int 13h
-	jc .disk_error				; jmp if carry
-	cmp ah, 0					; 0 = no error
-	jne .disk_error				; jmp if error
-	popa
-	ret
-	.disk_error:
-		mov si, DISK_ERR_MSG
-		call print
-		popa
-		ret
-
-code_seg equ code_descriptor - gdt_start
-data_seg equ data_descriptor - gdt_start
-
-gdt_start:
-	null_descriptor: dd 0, 0
-	code_descriptor:
-		dw 0xffff				; limit
-		dw 0					; base = 32 bits total, this line = 16 bits for base
-		db 0					; 8 bits for base
-		db 0b10011010			; p.p.t. + type flags
-		db 0b11001111			; other flags + last four bits of limit	
-		db 0					; 8 bits for base
-	data_descriptor:			; same for this
-		dw 0xffff
-		dw 0
-		db 0
-		db 0b10010010
-		db 0b11001111
-		db 0
-gdt_end:
-gdt_descriptor:
-	dw gdt_end - gdt_start - 1	; size of gdt
-	dd gdt_start				; pointer to start
 
 main16:
-	mov ah, 0
-	mov al, 03h
-	int 10h						; clear screen
+	mov [BOOT_DISK], dl
 
-	mov ax, 0					; setup segments
+	mov ax, 0
 	mov ds, ax
 	mov es, ax
 	mov ss, ax
 	mov sp, 0x7c00
 
-	cli							; clear interrupts
-	lgdt [gdt_descriptor]		; load gdt
-	mov eax, cr0				; change last bit of cr0 to 1
-	or eax, 1
-	mov cr0, eax				; start of 32 bit mode
-	jmp code_seg:main32			; jmp to protected mode
+	mov al, 2
+	call read_disk
+	jmp elevate_pm
 	jmp $
 
-[bits 32]
-
-main32:
-	
-	jmp $
+%include "realmode/functions.asm"
+%include "realmode/gdt_pm.asm"
+%include "realmode/elevate_pm.asm"
 
 DISK_ERR_MSG: db 'Disk Error!', 0
 BOOT_DISK: db 0
 
 times 510-($-$$) db 0
 dw 0xaa55
+
+[bits 32]
+
+KERNEL_LOCATION equ 0x8000
+
+main32:
+	call check_cpuid										; check for cpuid	
+	call check_longmode										; check for longmode
+	call setup_paging										; setup PAE paging
+	call clear_screen_pm
+	jmp elevate_lm
+	jmp $
+
+%include "protectedmode/print.asm"
+%include "protectedmode/clear.asm"
+%include "protectedmode/check_lm.asm"
+%include "protectedmode/gdt_lm.asm"
+%include "protectedmode/paging.asm"
+%include "protectedmode/elevate_lm.asm"
+
+[bits 64]
+
+main64:
+	jmp KERNEL_LOCATION
+
+times 512-($-main32) db 0
