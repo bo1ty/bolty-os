@@ -1,5 +1,6 @@
-section .text
-    [bits 64]
-    [extern main]
+[bits 64]
+[extern main]
+
+_start:
     call main
     jmp $

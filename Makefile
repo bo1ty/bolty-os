@@ -1,13 +1,7 @@
-CC = x86_64-elf-gcc
-LD = x86_64-elf-ld
-
-CC_FLAGS = -ggdb -c -ffreestanding -target x86_64-none-elf
-
-
 BUILD_DIR=build
 
 .PHONY: all
-all: clean compile run
+all: clean compile
 
 .PHONY: clean
 clean:
