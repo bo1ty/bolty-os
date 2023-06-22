@@ -19,9 +19,9 @@ main16:
 	jmp elevate_pm
 	jmp $
 
-%include "realmode/functions.asm"
-%include "realmode/gdt_pm.asm"
-%include "realmode/elevate_pm.asm"
+%include "boot/realmode/functions.asm"
+%include "boot/realmode/gdt_pm.asm"
+%include "boot/realmode/elevate_pm.asm"
 
 DISK_ERR_MSG: db 'Disk Error!', 0
 BOOT_DISK: db 0
@@ -41,12 +41,12 @@ main32:
 	jmp elevate_lm
 	jmp $
 
-%include "protectedmode/print.asm"
-%include "protectedmode/clear.asm"
-%include "protectedmode/check_lm.asm"
-%include "protectedmode/gdt_lm.asm"
-%include "protectedmode/paging.asm"
-%include "protectedmode/elevate_lm.asm"
+%include "boot/protectedmode/print.asm"
+%include "boot/protectedmode/clear.asm"
+%include "boot/protectedmode/check_lm.asm"
+%include "boot/protectedmode/gdt_lm.asm"
+%include "boot/protectedmode/paging.asm"
+%include "boot/protectedmode/elevate_lm.asm"
 
 [bits 64]
 
