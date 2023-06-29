@@ -1,4 +1,4 @@
-#include "cpu/interrupts/idt.h"
+#include "idt.h"
 #include <stdint.h>
 
 #define FLAG_SET(flag, value) flag |= (value)

@@ -2,7 +2,7 @@ CC = x86_64-elf-gcc
 LD = x86_64-elf-ld
 ASM = nasm
 
-CC_FLAGS = -ffreestanding -m64 -c -I ./include/
+CC_FLAGS = -ffreestanding -m64 -c
 LD_FLAGS = -Ttext 0x8000 --oformat binary
 ASM_FLAGS = -f elf64
 
@@ -10,6 +10,8 @@ BUILD_DIR=build
 
 CSRC := $(shell find . -name '*.c')
 CTAR := $(patsubst %.c,%.o,$(CSRC))
+
+INCDIRS := $(foreach dir,$(shell find include -type d),-I$(dir))
 
 ASMSRC := $(shell find . -name '*.asm' ! -path "./boot/*")
 ASMTAR := $(patsubst %.asm,%.o,$(ASMSRC))
@@ -33,7 +35,7 @@ build: boot $(CTAR) $(ASMTAR)
 
 %.o: %.c
 	mkdir -p $(dir $(BUILD_DIR)/$@)
-	$(CC) $(CC_FLAGS) $^ -o $(BUILD_DIR)/$@
+	$(CC) $(CC_FLAGS) $(INCDIRS) $^ -o $(BUILD_DIR)/$@	
 
 %.o: %.asm
 	mkdir -p $(dir $(BUILD_DIR)/$@)

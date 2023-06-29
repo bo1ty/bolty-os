@@ -1,5 +1,5 @@
-#include "cpu/interrupts/idt.h"
-#include "drivers/vga.h"
+#include "idt.h"
+#include "vga.h"
 
 extern int main() {
   idt_init_amd64();
