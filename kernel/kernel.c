@@ -1,7 +1,9 @@
-#include "../include/drivers/vga.h"
+#include "cpu/interrupts/idt.h"
+#include "drivers/vga.h"
 
 extern int main() {
-    *(char *) 0xb8000 = 'A';
-    clear_tty();
-    return 0;
+  idt_init_amd64();
+  clear_tty();
+  *((char *)0xb8000) = 'A';
+  return 0;
 }

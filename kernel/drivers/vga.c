@@ -1,3 +1,5 @@
+#include "drivers/vga.h"
+
 #define VIDEO_MEMORY ((char*) 0xb8000)
 
 void clear_tty() {
@@ -5,4 +7,8 @@ void clear_tty() {
         // 0x0f = white on black, 0x20 = space
         *((short*)i) = 0x0f20;
     }
+}
+
+void print() {
+    
 }

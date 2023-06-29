@@ -37,7 +37,6 @@ main32:
 	call check_cpuid										; check for cpuid	
 	call check_longmode										; check for longmode
 	call setup_paging										; setup PAE paging
-	call clear_screen_pm
 	jmp elevate_lm
 	jmp $
 
