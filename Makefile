@@ -7,13 +7,14 @@ LD_FLAGS = -Ttext 0x8000 --oformat binary
 ASM_FLAGS = -f elf64
 
 BUILD_DIR=build
+SRC_DIR=src
 
 CSRC := $(shell find . -name '*.c')
 CTAR := $(patsubst %.c,%.o,$(CSRC))
 
 INCDIRS := $(foreach dir,$(shell find include -type d),-I$(dir))
 
-ASMSRC := $(shell find . -name '*.asm' ! -path "./boot/*")
+ASMSRC := $(shell find . -name '*.asm' ! -path "./src/boot/*")
 ASMTAR := $(patsubst %.asm,%.o,$(ASMSRC))
 
 .PHONY: all
@@ -26,25 +27,22 @@ clean:
 
 .PHONY: boot
 boot:
-	nasm boot/boot.asm -f bin -o $(BUILD_DIR)/boot.bin
+	mkdir -p build/boot
+	nasm $(SRC_DIR)/boot/boot.asm -f bin -o $(BUILD_DIR)/boot/boot.bin
 
 .PHONY: build
 build: boot $(CTAR) $(ASMTAR)
-	$(LD) -o $(BUILD_DIR)/full_kernel.bin $(LD_FLAGS) $(foreach file, $(ASMTAR) $(CTAR), $(BUILD_DIR)/$(subst ./,,$(file)))
-	cat $(BUILD_DIR)/boot.bin $(BUILD_DIR)/full_kernel.bin > $(BUILD_DIR)/os.bin
+	$(LD) -o $(BUILD_DIR)/kernel/kernel.bin $(LD_FLAGS) $(foreach file, $(ASMTAR) $(CTAR), $(BUILD_DIR)/$(subst ./$(SRC_DIR)/,,$(file)))
+	cat $(BUILD_DIR)/boot/boot.bin $(BUILD_DIR)/kernel/kernel.bin > $(BUILD_DIR)/os.bin
 
 %.o: %.c
-	mkdir -p $(dir $(BUILD_DIR)/$@)
-	$(CC) $(CC_FLAGS) $(INCDIRS) $^ -o $(BUILD_DIR)/$@	
+	mkdir -p $(dir $(BUILD_DIR)/$(subst src/,,$@))
+	$(CC) $(CC_FLAGS) $(INCDIRS) $^ -o $(BUILD_DIR)/$(subst src/,,$@)
 
 %.o: %.asm
-	mkdir -p $(dir $(BUILD_DIR)/$@)
-	$(ASM) $^ ${ASM_FLAGS} -o $(BUILD_DIR)/$@
+	mkdir -p $(dir $(BUILD_DIR)/$(subst src/,,$@))
+	$(ASM) $^ ${ASM_FLAGS} -o $(BUILD_DIR)/$(subst src/,,$@)
 
 .PHONY: run
 run:
 	qemu-system-x86_64 -drive file=$(BUILD_DIR)/os.bin,format=raw,index=0,media=disk
-
-.PHONY: test
-test:
-	echo $(CSRC)
